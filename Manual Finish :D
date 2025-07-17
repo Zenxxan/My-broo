@@ -4,8 +4,8 @@ function ManualFinish.Init(UI, Core, notify)
     local State = { Enabled = false }
 
     local Config = {
-        DistanceLimit = 10,
-        CheckInterval = 0.70
+        DistanceLimit = 15,
+        CheckInterval = 0.75
     }
 
     local lastCheck = 0
