@@ -1,0 +1,123 @@
+local ManualFinish = {}
+
+function ManualFinish.Init(UI, Core, notify)
+    local State = { Enabled = false }
+
+    local Config = {
+        DistanceLimit = 35,
+        CheckInterval = 0.75
+    }
+
+    local lastCheck = 0
+    local activePlayers = {}
+    local friendCache = {}
+    local attachedPrompts = {}
+
+    local function isFriend(player)
+        if friendCache[player] == nil then
+            local isFriend = Core.Services.FriendsList and Core.Services.FriendsList[player.Name:lower()] or false
+            friendCache[player] = isFriend
+        end
+        return friendCache[player]
+    end
+
+    -- Track valid players
+    local function trackPlayer(player)
+        if player ~= Core.PlayerData.LocalPlayer then
+            activePlayers[player] = true
+        end
+    end
+
+    for _, player in ipairs(Core.Services.Players:GetPlayers()) do
+        trackPlayer(player)
+    end
+
+    Core.Services.Players.PlayerAdded:Connect(trackPlayer)
+    Core.Services.Players.PlayerRemoving:Connect(function(player)
+        activePlayers[player] = nil
+        friendCache[player] = nil
+
+        local prompt = attachedPrompts[player]
+        if prompt and prompt:IsDescendantOf(game) then
+            local char = player.Character
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            if root then
+                prompt.Parent = root
+            end
+        end
+        attachedPrompts[player] = nil
+    end)
+
+    Core.Services.RunService.RenderStepped:Connect(function(dt)
+        if not State.Enabled then
+            -- Return prompts to original owners
+            for player, prompt in pairs(attachedPrompts) do
+                local char = player.Character
+                local root = char and char:FindFirstChild("HumanoidRootPart")
+                if root and prompt and prompt:IsDescendantOf(game) then
+                    prompt.Parent = root
+                end
+                attachedPrompts[player] = nil
+            end
+            return
+        end
+
+        lastCheck += dt
+        if lastCheck < Config.CheckInterval then return end
+        lastCheck = 0
+
+        local localChar = Core.PlayerData.LocalPlayer.Character
+        local localRoot = localChar and localChar:FindFirstChild("HumanoidRootPart")
+        if not localRoot then return end
+
+        local localPos = localRoot.Position
+        local distLimitSq = Config.DistanceLimit ^ 2
+
+        for player in pairs(activePlayers) do
+            if isFriend(player) then continue end
+
+            local char = Core.Services.Workspace:FindFirstChild(player.Name)
+            if not char then continue end
+
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            local root = char:FindFirstChild("HumanoidRootPart")
+            local prompt = root and root:FindFirstChild("FinishPrompt")
+
+            if not (humanoid and root and prompt and prompt:IsA("ProximityPrompt") and prompt.Enabled) then
+                continue
+            end
+
+            if humanoid.Health <= 0 then continue end
+
+            local distanceSq = (localPos - root.Position).Magnitude ^ 2
+            if distanceSq <= distLimitSq then
+                if attachedPrompts[player] ~= prompt then
+                    prompt.Parent = localRoot
+                    attachedPrompts[player] = prompt
+                end
+            else
+                if attachedPrompts[player] then
+                    prompt.Parent = root
+                    attachedPrompts[player] = nil
+                end
+            end
+        end
+    end)
+
+    
+    if UI.Tabs and UI.Tabs.Auto then
+        local section = UI.Tabs.Auto:Section({ Name = "ManualFinish", Side = "Left" })
+        if section then
+            section:Header({ Name = "BringFinishPrompt" })
+            section:Toggle({
+                Name = "Enabled",
+                Default = State.Enabled,
+                Callback = function(val)
+                    State.Enabled = val
+                end
+            }, "ManualFinish")
+        end
+    end
+end
+
+return ManualFinish
