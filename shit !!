@@ -27,9 +27,9 @@ return {
             mainFrame.Name = "Main"
             mainFrame.Size = UDim2.new(0, 200, 0, 100)
             mainFrame.Position = UDim2.new(0.5, -100, 0.8, 0)
-            mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+            mainFrame.BackgroundColor3 = Color3.fromRGB(23, 32, 46)
             mainFrame.BorderSizePixel = 0
-            mainFrame.BackgroundTransparency = 0.1
+            mainFrame.BackgroundTransparency = 0.15
             mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
             mainFrame.Parent = screenGui
 
@@ -37,15 +37,14 @@ return {
             corner.CornerRadius = UDim.new(0, 10)
 
             local stroke = Instance.new("UIStroke", mainFrame)
-            stroke.Color = Color3.fromRGB(60, 60, 255)
+            stroke.Color = Color3.fromRGB(80, 130, 255)
             stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
-            -- Drag Handle
             local dragHandle = Instance.new("Frame")
             dragHandle.Name = "DragHandle"
             dragHandle.Size = UDim2.new(1, 0, 0, 20)
             dragHandle.Position = UDim2.new(0, 0, 0, 0)
-            dragHandle.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+            dragHandle.BackgroundColor3 = Color3.fromRGB(17, 24, 34)
             dragHandle.BackgroundTransparency = 0.2
             dragHandle.BorderSizePixel = 0
             dragHandle.Parent = mainFrame
@@ -54,7 +53,7 @@ return {
             dragLabel.Text = "➕"
             dragLabel.Font = Enum.Font.GothamBold
             dragLabel.TextSize = 14
-            dragLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+            dragLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
             dragLabel.BackgroundTransparency = 1
             dragLabel.Size = UDim2.new(0, 20, 1, 0)
             dragLabel.Position = UDim2.new(1, -44, 0, 0)
@@ -66,7 +65,7 @@ return {
             minimizeBtn.Text = "🗕"
             minimizeBtn.Font = Enum.Font.GothamBold
             minimizeBtn.TextSize = 14
-            minimizeBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+            minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
             minimizeBtn.BackgroundTransparency = 1
             minimizeBtn.Size = UDim2.new(0, 20, 1, 0)
             minimizeBtn.Position = UDim2.new(1, -24, 0, 0)
@@ -88,15 +87,14 @@ return {
             statusLabel.Text = "⦿ Hitbox Roll: OFF"
             statusLabel.Font = Enum.Font.Gotham
             statusLabel.TextSize = 14
-            statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-            statusLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            statusLabel.TextColor3 = Color3.fromRGB(200, 220, 255)
+            statusLabel.BackgroundColor3 = Color3.fromRGB(30, 38, 55)
             statusLabel.Position = UDim2.new(0, 10, 0, 35)
             statusLabel.Size = UDim2.new(1, -20, 0, 40)
             statusLabel.TextXAlignment = Enum.TextXAlignment.Left
             statusLabel.Parent = mainFrame
             Instance.new("UICorner", statusLabel).CornerRadius = UDim.new(0, 6)
 
-            -- Minimize Logic
             minimizeBtn.MouseButton1Click:Connect(function()
                 minimized = not minimized
                 statusLabel.Visible = not minimized
@@ -104,7 +102,6 @@ return {
                 minimizeBtn.Text = minimized and "⿻" or "➖"
             end)
 
-            -- Dragging Logic
             local dragging = false
             local dragStart, startPos
             local inputConn
@@ -142,10 +139,9 @@ return {
 
             UIS.InputChanged:Connect(onInputChanged)
 
-            -- Status Toggle Logic
             statusLabel.MouseButton1Click:Connect(function()
                 if not toggleMasterEnabled then
-                    Notify("Hitbox Roll", "Enable from PC toggle first!", 2)
+                    Notify("Hitbox Roll", "Enable from toggle first!", 2)
                     return
                 end
                 getgenv().HitboxRoll = not getgenv().HitboxRoll
@@ -153,7 +149,6 @@ return {
                 Notify("Hitbox Roll", getgenv().HitboxRoll and "Enabled (Mobile)" or "Disabled (Mobile)", 2)
             end)
 
-            -- Toggles
             UI.Sections.AntiLock:Toggle({
                 Name = "Hitbox Roll",
                 Default = false,
@@ -161,7 +156,7 @@ return {
                     toggleMasterEnabled = state
                     getgenv().HitboxRoll = false
                     screenGui.Enabled = toggleMasterEnabled and mobileGuiVisible
-                    statusLabel.Text = " Hitbox Roll: OFF"
+                    statusLabel.Text = "⦿ Hitbox Roll: OFF"
                     Notify("Hitbox Roll", state and "Ready for Mobile Use" or "Disabled", 2)
                 end
             }, "HitboxRoll")
@@ -191,7 +186,6 @@ return {
                 end
             }, "HitboxRollKey")
 
-            -- Movement Logic
             local orbitRadius, rollSpeed = 4, 1440
             local flickerAmplitude, spoofYVelocity = 1.5, true
             local velocityRangeY = 250
@@ -239,7 +233,6 @@ return {
                 end
             end)
 
-            -- Spoofing for Antilock
             local OldIndex
             OldIndex = hookmetamethod(game, "__index", newcclosure(function(self, key)
                 if getgenv().HitboxRoll and not checkcaller() then
