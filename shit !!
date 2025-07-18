@@ -45,7 +45,7 @@ return {
             dragHandle.Parent = mainFrame
 
             local dragLabel = Instance.new("TextLabel")
-            dragLabel.Text = "☰"
+            dragLabel.Text = "="
             dragLabel.Font = Enum.Font.GothamBold
             dragLabel.TextSize = 14
             dragLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
@@ -57,7 +57,7 @@ return {
             dragLabel.Parent = dragHandle
 
             local minimizeBtn = Instance.new("TextButton")
-            minimizeBtn.Text = "🗕"
+            minimizeBtn.Text = "-"
             minimizeBtn.Font = Enum.Font.GothamBold
             minimizeBtn.TextSize = 14
             minimizeBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
