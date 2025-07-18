@@ -11,6 +11,7 @@ return {
             getgenv().HitboxRoll = false
             local toggleMasterEnabled = false
             local mobileGuiVisible = false
+            local minimized = false
 
             UI.Sections.AntiLock:Header({ Name = "Hitbox Roll" })
 
@@ -50,10 +51,21 @@ return {
             dragLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
             dragLabel.BackgroundTransparency = 1
             dragLabel.Size = UDim2.new(0, 20, 1, 0)
-            dragLabel.Position = UDim2.new(1, -24, 0, 0)
+            dragLabel.Position = UDim2.new(1, -44, 0, 0)
             dragLabel.TextXAlignment = Enum.TextXAlignment.Center
             dragLabel.TextYAlignment = Enum.TextYAlignment.Center
             dragLabel.Parent = dragHandle
+
+            local minimizeBtn = Instance.new("TextButton")
+            minimizeBtn.Text = "🗕"
+            minimizeBtn.Font = Enum.Font.GothamBold
+            minimizeBtn.TextSize = 14
+            minimizeBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+            minimizeBtn.BackgroundTransparency = 1
+            minimizeBtn.Size = UDim2.new(0, 20, 1, 0)
+            minimizeBtn.Position = UDim2.new(1, -24, 0, 0)
+            minimizeBtn.TextXAlignment = Enum.TextXAlignment.Center
+            minimizeBtn.Parent = dragHandle
 
             local title = Instance.new("TextLabel")
             title.Text = "Hitbox Roll"
@@ -78,30 +90,20 @@ return {
             statusLabel.Parent = mainFrame
             Instance.new("UICorner", statusLabel).CornerRadius = UDim.new(0, 6)
 
-            -- Dragging via Handle (Mobile + PC)
-            local dragging, dragStart, startPos
-
-            local function startDrag(input)
-                dragging = true
-                dragStart = input.Position
-                startPos = mainFrame.Position
-
-                local function endDrag(_input)
-                    if _input.UserInputState == Enum.UserInputState.End then
-                        dragging = false
-                    end
-                end
-
-                input.Changed:Connect(endDrag)
-            end
-
-            dragHandle.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    startDrag(input)
-                end
+            -- Minimize Logic
+            minimizeBtn.MouseButton1Click:Connect(function()
+                minimized = not minimized
+                statusLabel.Visible = not minimized
+                mainFrame.Size = minimized and UDim2.new(0, 200, 0, 30) or UDim2.new(0, 200, 0, 100)
+                minimizeBtn.Text = minimized and "🗖" or "🗕"
             end)
 
-            UIS.InputChanged:Connect(function(input)
+            -- Dragging Logic (Unsticky)
+            local dragging = false
+            local dragStart, startPos
+            local inputConn
+
+            local function onInputChanged(input)
                 if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                     local delta = input.Position - dragStart
                     mainFrame.Position = UDim2.new(
@@ -111,7 +113,28 @@ return {
                         startPos.Y.Offset + delta.Y
                     )
                 end
+            end
+
+            local function onInputEnded()
+                dragging = false
+                if inputConn then inputConn:Disconnect() inputConn = nil end
+            end
+
+            dragHandle.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = true
+                    dragStart = input.Position
+                    startPos = mainFrame.Position
+                    if inputConn then inputConn:Disconnect() end
+                    inputConn = input.Changed:Connect(function()
+                        if input.UserInputState == Enum.UserInputState.End then
+                            onInputEnded()
+                        end
+                    end)
+                end
             end)
+
+            UIS.InputChanged:Connect(onInputChanged)
 
             -- Mobile toggle logic
             statusLabel.MouseButton1Click:Connect(function()
@@ -209,7 +232,6 @@ return {
                 end
             end)
 
-            -- Anti-lock spoofing
             local OldIndex
             OldIndex = hookmetamethod(game, "__index", newcclosure(function(self, key)
                 if getgenv().HitboxRoll and not checkcaller() then
