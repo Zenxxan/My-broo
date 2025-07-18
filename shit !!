@@ -167,7 +167,7 @@ return {
             }, "HitboxRoll")
 
             UI.Sections.AntiLock:Toggle({
-                Name = "Show Mobile Button",
+                Name = "Show Mobile Gui",
                 Default = false,
                 Callback = function(state)
                     mobileGuiVisible = state
