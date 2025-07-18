@@ -104,9 +104,6 @@ oldFireServer = hookfunction(remoteEvent.FireServer, function(self, ...)
     return oldFireServer(self, ...)
 end)
 
-return GunSilent
-
-
 local function safeCreateInstance(className, properties)
     local instance = Instance.new(className)
     if properties then
