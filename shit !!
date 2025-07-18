@@ -13,7 +13,7 @@ return {
             local mobileGuiVisible = false
             local minimized = false
 
-            UI.Sections.AntiLock:Header({ Name = "🎯 Hitbox Roll" })
+            UI.Sections.AntiLock:Header({ Name = "Hitbox Roll" })
 
             local screenGui = Instance.new("ScreenGui")
             screenGui.Name = "HitboxRollGui"
