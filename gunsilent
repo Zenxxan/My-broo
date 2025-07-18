@@ -1489,7 +1489,7 @@ local function Init(UI, Core, notify)
                     if selected then CombatElements.HitPart.callback(option) break end
                 end
                 CombatElements.ShotgunSupport.callback(CombatElements.ShotgunSupport.element:GetState())
-                CombatElements.GenerateBullets.callback(CombatElements.GenerateBullets.element:GetValue())
+                CombatElements.RageShotCount.callback(CombatElements.RageShotCount.element:GetValue())
                 local sortMethodOptions = CombatElements.SortMethod.element:GetOptions()
                 for option, selected in pairs(sortMethodOptions) do
                     if selected then CombatElements.SortMethod.callback(option) break end
