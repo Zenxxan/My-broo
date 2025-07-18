@@ -51,7 +51,7 @@ return {
             dragHandle.Parent = mainFrame
 
             local dragLabel = Instance.new("TextLabel")
-            dragLabel.Text = "☰"
+            dragLabel.Text = "➕"
             dragLabel.Font = Enum.Font.GothamBold
             dragLabel.TextSize = 14
             dragLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
@@ -74,7 +74,7 @@ return {
             minimizeBtn.Parent = dragHandle
 
             local title = Instance.new("TextLabel")
-            title.Text = "🎯 Hitbox Roll"
+            title.Text = "Hitbox Roll"
             title.Font = Enum.Font.GothamBold
             title.TextSize = 16
             title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -85,7 +85,7 @@ return {
             title.Parent = mainFrame
 
             local statusLabel = Instance.new("TextButton")
-            statusLabel.Text = "⚙️ Hitbox Roll: OFF"
+            statusLabel.Text = "⦿ Hitbox Roll: OFF"
             statusLabel.Font = Enum.Font.Gotham
             statusLabel.TextSize = 14
             statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -101,7 +101,7 @@ return {
                 minimized = not minimized
                 statusLabel.Visible = not minimized
                 mainFrame.Size = minimized and UDim2.new(0, 200, 0, 30) or UDim2.new(0, 200, 0, 100)
-                minimizeBtn.Text = minimized and "🗖" or "🗕"
+                minimizeBtn.Text = minimized and "⿻" or "➖"
             end)
 
             -- Dragging Logic
@@ -149,7 +149,7 @@ return {
                     return
                 end
                 getgenv().HitboxRoll = not getgenv().HitboxRoll
-                statusLabel.Text = getgenv().HitboxRoll and "⚙️ Hitbox Roll: ON" or "⚙️ Hitbox Roll: OFF"
+                statusLabel.Text = getgenv().HitboxRoll and "⦿ Hitbox Roll: ON" or "⦿ Hitbox Roll: OFF"
                 Notify("Hitbox Roll", getgenv().HitboxRoll and "Enabled (Mobile)" or "Disabled (Mobile)", 2)
             end)
 
@@ -161,7 +161,7 @@ return {
                     toggleMasterEnabled = state
                     getgenv().HitboxRoll = false
                     screenGui.Enabled = toggleMasterEnabled and mobileGuiVisible
-                    statusLabel.Text = "⚙️ Hitbox Roll: OFF"
+                    statusLabel.Text = " Hitbox Roll: OFF"
                     Notify("Hitbox Roll", state and "Ready for Mobile Use" or "Disabled", 2)
                 end
             }, "HitboxRoll")
@@ -186,7 +186,7 @@ return {
                         return
                     end
                     getgenv().HitboxRoll = not getgenv().HitboxRoll
-                    statusLabel.Text = getgenv().HitboxRoll and "⚙️ Hitbox Roll: ON" or "⚙️ Hitbox Roll: OFF"
+                    statusLabel.Text = getgenv().HitboxRoll and "⦿ Hitbox Roll: ON" or "⦿ Hitbox Roll: OFF"
                     Notify("Hitbox Roll", getgenv().HitboxRoll and "Enabled (Keybind)" or "Disabled (Keybind)", 2)
                 end
             }, "HitboxRollKey")
