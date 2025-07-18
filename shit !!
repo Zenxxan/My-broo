@@ -11,14 +11,14 @@ return {
             getgenv().HitboxRoll = false
             local toggleMasterEnabled = false
             local mobileGuiVisible = false
+            local minimized = false
 
-            UI.Sections.AntiLock:Header({ Name = "Hitbox Roll" })
+            UI.Sections.AntiLock:Header({ Name = "🎯 Hitbox Roll" })
 
             local screenGui = Instance.new("ScreenGui")
             screenGui.Name = "HitboxRollGui"
             screenGui.ResetOnSpawn = false
             screenGui.Enabled = false
-            screenGui.IgnoreGuiInset = true
             pcall(function()
                 screenGui.Parent = game:GetService("CoreGui")
             end)
@@ -33,54 +33,59 @@ return {
             mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
             mainFrame.Parent = screenGui
 
-            Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
-            Instance.new("UIStroke", mainFrame).Color = Color3.fromRGB(60, 60, 255)
+            local corner = Instance.new("UICorner", mainFrame)
+            corner.CornerRadius = UDim.new(0, 10)
 
+            local stroke = Instance.new("UIStroke", mainFrame)
+            stroke.Color = Color3.fromRGB(60, 60, 255)
+            stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+            -- Drag Handle
             local dragHandle = Instance.new("Frame")
             dragHandle.Name = "DragHandle"
-            dragHandle.Size = UDim2.new(1, 0, 0, 24)
+            dragHandle.Size = UDim2.new(1, 0, 0, 20)
             dragHandle.Position = UDim2.new(0, 0, 0, 0)
             dragHandle.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-            dragHandle.BackgroundTransparency = 0.1
+            dragHandle.BackgroundTransparency = 0.2
             dragHandle.BorderSizePixel = 0
             dragHandle.Parent = mainFrame
-            Instance.new("UICorner", dragHandle).CornerRadius = UDim.new(0, 8)
 
-            local dragIcon = Instance.new("TextLabel")
-            dragIcon.Text = "☰"
-            dragIcon.Font = Enum.Font.GothamBold
-            dragIcon.TextSize = 14
-            dragIcon.TextColor3 = Color3.fromRGB(180, 180, 180)
-            dragIcon.BackgroundTransparency = 1
-            dragIcon.Size = UDim2.new(0, 24, 1, 0)
-            dragIcon.Position = UDim2.new(0, 6, 0, 0)
-            dragIcon.TextXAlignment = Enum.TextXAlignment.Center
-            dragIcon.TextYAlignment = Enum.TextYAlignment.Center
-            dragIcon.Parent = dragHandle
+            local dragLabel = Instance.new("TextLabel")
+            dragLabel.Text = "☰"
+            dragLabel.Font = Enum.Font.GothamBold
+            dragLabel.TextSize = 14
+            dragLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+            dragLabel.BackgroundTransparency = 1
+            dragLabel.Size = UDim2.new(0, 20, 1, 0)
+            dragLabel.Position = UDim2.new(1, -44, 0, 0)
+            dragLabel.TextXAlignment = Enum.TextXAlignment.Center
+            dragLabel.TextYAlignment = Enum.TextYAlignment.Center
+            dragLabel.Parent = dragHandle
 
             local minimizeBtn = Instance.new("TextButton")
-            minimizeBtn.Text = "➖"
-            minimizeBtn.Font = Enum.Font.Gotham
+            minimizeBtn.Text = "🗕"
+            minimizeBtn.Font = Enum.Font.GothamBold
             minimizeBtn.TextSize = 14
-            minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            minimizeBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
             minimizeBtn.BackgroundTransparency = 1
-            minimizeBtn.Size = UDim2.new(0, 24, 1, 0)
-            minimizeBtn.Position = UDim2.new(1, -28, 0, 0)
+            minimizeBtn.Size = UDim2.new(0, 20, 1, 0)
+            minimizeBtn.Position = UDim2.new(1, -24, 0, 0)
+            minimizeBtn.TextXAlignment = Enum.TextXAlignment.Center
             minimizeBtn.Parent = dragHandle
 
             local title = Instance.new("TextLabel")
-            title.Text = "Hitbox Roll"
+            title.Text = "🎯 Hitbox Roll"
             title.Font = Enum.Font.GothamBold
             title.TextSize = 16
             title.TextColor3 = Color3.fromRGB(255, 255, 255)
             title.BackgroundTransparency = 1
-            title.Position = UDim2.new(0, 34, 0, 0)
-            title.Size = UDim2.new(1, -60, 0, 24)
+            title.Position = UDim2.new(0, 10, 0, 5)
+            title.Size = UDim2.new(1, -20, 0, 20)
             title.TextXAlignment = Enum.TextXAlignment.Left
-            title.Parent = dragHandle
+            title.Parent = mainFrame
 
             local statusLabel = Instance.new("TextButton")
-            statusLabel.Text = "⦿ Hitbox Roll: OFF"
+            statusLabel.Text = "⚙️ Hitbox Roll: OFF"
             statusLabel.Font = Enum.Font.Gotham
             statusLabel.TextSize = 14
             statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -91,14 +96,34 @@ return {
             statusLabel.Parent = mainFrame
             Instance.new("UICorner", statusLabel).CornerRadius = UDim.new(0, 6)
 
-            -- Drag logic (fixed)
-            local dragging, dragStart, startPos, inputConn
-            local function endDrag()
-                dragging = false
-                if inputConn then
-                    inputConn:Disconnect()
-                    inputConn = nil
+            -- Minimize Logic
+            minimizeBtn.MouseButton1Click:Connect(function()
+                minimized = not minimized
+                statusLabel.Visible = not minimized
+                mainFrame.Size = minimized and UDim2.new(0, 200, 0, 30) or UDim2.new(0, 200, 0, 100)
+                minimizeBtn.Text = minimized and "🗖" or "🗕"
+            end)
+
+            -- Dragging Logic
+            local dragging = false
+            local dragStart, startPos
+            local inputConn
+
+            local function onInputChanged(input)
+                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                    local delta = input.Position - dragStart
+                    mainFrame.Position = UDim2.new(
+                        startPos.X.Scale,
+                        startPos.X.Offset + delta.X,
+                        startPos.Y.Scale,
+                        startPos.Y.Offset + delta.Y
+                    )
                 end
+            end
+
+            local function onInputEnded()
+                dragging = false
+                if inputConn then inputConn:Disconnect() inputConn = nil end
             end
 
             dragHandle.InputBegan:Connect(function(input)
@@ -109,39 +134,26 @@ return {
                     if inputConn then inputConn:Disconnect() end
                     inputConn = input.Changed:Connect(function()
                         if input.UserInputState == Enum.UserInputState.End then
-                            endDrag()
+                            onInputEnded()
                         end
                     end)
                 end
             end)
 
-            UIS.InputChanged:Connect(function(input)
-                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                    local delta = input.Position - dragStart
-                    mainFrame.Position = UDim2.new(
-                        startPos.X.Scale,
-                        startPos.X.Offset + delta.X,
-                        startPos.Y.Scale,
-                        startPos.Y.Offset + delta.Y
-                    )
-                end
-            end)
+            UIS.InputChanged:Connect(onInputChanged)
 
-            minimizeBtn.MouseButton1Click:Connect(function()
-                mainFrame.Visible = not mainFrame.Visible
-            end)
-
-            -- Toggle logic
+            -- Status Toggle Logic
             statusLabel.MouseButton1Click:Connect(function()
                 if not toggleMasterEnabled then
                     Notify("Hitbox Roll", "Enable from PC toggle first!", 2)
                     return
                 end
                 getgenv().HitboxRoll = not getgenv().HitboxRoll
-                statusLabel.Text = getgenv().HitboxRoll and "⦿ Hitbox Roll: ON" or "⦿ Hitbox Roll: OFF"
+                statusLabel.Text = getgenv().HitboxRoll and "⚙️ Hitbox Roll: ON" or "⚙️ Hitbox Roll: OFF"
                 Notify("Hitbox Roll", getgenv().HitboxRoll and "Enabled (Mobile)" or "Disabled (Mobile)", 2)
             end)
 
+            -- Toggles
             UI.Sections.AntiLock:Toggle({
                 Name = "Hitbox Roll",
                 Default = false,
@@ -149,7 +161,7 @@ return {
                     toggleMasterEnabled = state
                     getgenv().HitboxRoll = false
                     screenGui.Enabled = toggleMasterEnabled and mobileGuiVisible
-                    statusLabel.Text = "⦿ Hitbox Roll: OFF"
+                    statusLabel.Text = "⚙️ Hitbox Roll: OFF"
                     Notify("Hitbox Roll", state and "Ready for Mobile Use" or "Disabled", 2)
                 end
             }, "HitboxRoll")
@@ -174,12 +186,12 @@ return {
                         return
                     end
                     getgenv().HitboxRoll = not getgenv().HitboxRoll
-                    statusLabel.Text = getgenv().HitboxRoll and "⦿ Hitbox Roll: ON" or "⦿ Hitbox Roll: OFF"
+                    statusLabel.Text = getgenv().HitboxRoll and "⚙️ Hitbox Roll: ON" or "⚙️ Hitbox Roll: OFF"
                     Notify("Hitbox Roll", getgenv().HitboxRoll and "Enabled (Keybind)" or "Disabled (Keybind)", 2)
                 end
             }, "HitboxRollKey")
 
-            -- Orbit/flicker logic
+            -- Movement Logic
             local orbitRadius, rollSpeed = 4, 1440
             local flickerAmplitude, spoofYVelocity = 1.5, true
             local velocityRangeY = 250
@@ -227,6 +239,7 @@ return {
                 end
             end)
 
+            -- Spoofing for Antilock
             local OldIndex
             OldIndex = hookmetamethod(game, "__index", newcclosure(function(self, key)
                 if getgenv().HitboxRoll and not checkcaller() then
@@ -239,7 +252,7 @@ return {
                         if self == lp.Character.HumanoidRootPart then
                             return originalCFrame or CFrame.new()
                         elseif self == lp.Character.Head then
-                            return (originalCFrame or CFrame.new()) + Vector3.new(0, lp.Character.HumanoidRootPart.Size.Y / 2 + 0.5, 0)
+                            return (originalCFrame or CFrame.new()) + Vector3.new(0, lp.Character.HumanoidRootPart.Size / 2 + 0.5, 0)
                         end
                     end
                 end
