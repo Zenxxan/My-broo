@@ -1,0 +1,240 @@
+task.defer(function()
+    repeat task.wait() until UI and UI.Sections and UI.Tabs and UI.Tabs.LocalPlayer
+
+    local Players = game:GetService("Players")
+    local UIS = game:GetService("UserInputService")
+    local RunService = game:GetService("RunService")
+    local lp = Players.LocalPlayer
+
+    getgenv().HitboxRoll = false
+    local toggleMasterEnabled = false
+    local mobileGuiVisible = false
+
+
+    UI.Sections.AntiLock:Header({ Name = "Hitbox Roll" })
+
+    
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "HitboxRollGui"
+    screenGui.ResetOnSpawn = false
+    screenGui.Enabled = false
+    screenGui.Parent = lp:WaitForChild("PlayerGui")
+
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "Main"
+    mainFrame.Size = UDim2.new(0, 200, 0, 100)
+    mainFrame.Position = UDim2.new(0.5, -100, 0.8, 0)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    mainFrame.BorderSizePixel = 0
+    mainFrame.BackgroundTransparency = 0.1
+    mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    mainFrame.Parent = screenGui
+
+    local uiCorner = Instance.new("UICorner", mainFrame)
+    uiCorner.CornerRadius = UDim.new(0, 10)
+
+    local stroke = Instance.new("UIStroke", mainFrame)
+    stroke.Thickness = 1
+    stroke.Color = Color3.fromRGB(60, 60, 255)
+
+    local title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.Text = "Hitbox Roll"
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 16
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.BackgroundTransparency = 1
+    title.Position = UDim2.new(0, 10, 0, 5)
+    title.Size = UDim2.new(1, -20, 0, 20)
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Parent = mainFrame
+
+    local statusLabel = Instance.new("TextButton")
+    statusLabel.Name = "StatusLabel"
+    statusLabel.Text = "⦿ Hitbox Roll: OFF"
+    statusLabel.Font = Enum.Font.Gotham
+    statusLabel.TextSize = 14
+    statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    statusLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    statusLabel.Position = UDim2.new(0, 10, 0, 35)
+    statusLabel.Size = UDim2.new(1, -20, 0, 40)
+    statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+    statusLabel.Parent = mainFrame
+
+    local innerCorner = Instance.new("UICorner", statusLabel)
+    innerCorner.CornerRadius = UDim.new(0, 6)
+
+    
+    local dragging, dragStart, startPos
+    mainFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = mainFrame.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    UIS.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+
+    
+    statusLabel.MouseButton1Click:Connect(function()
+        if not toggleMasterEnabled then
+            UI.Window:Notify({
+                Title = "Hitbox Roll",
+                Description = "Enable from PC toggle first!",
+                Lifetime = 2
+            })
+            return
+        end
+
+        getgenv().HitboxRoll = not getgenv().HitboxRoll
+        statusLabel.Text = getgenv().HitboxRoll and "⦿ Hitbox Roll: ON" or "⦿ Hitbox Roll: OFF"
+
+        UI.Window:Notify({
+            Title = "Hitbox Roll",
+            Description = getgenv().HitboxRoll and "Enabled (Mobile)" or "Disabled (Mobile)",
+            Lifetime = 2
+        })
+    end)
+
+    
+    UI.Sections.AntiLock:Toggle({
+        Name = "Hitbox Roll",
+        Default = false,
+        Callback = function(state)
+            toggleMasterEnabled = state
+            getgenv().HitboxRoll = false
+            screenGui.Enabled = toggleMasterEnabled and mobileGuiVisible
+            statusLabel.Text = "⦿ Hitbox Roll: OFF"
+
+            UI.Window:Notify({
+                Title = "Hitbox Roll",
+                Description = state and "Ready for Mobile Use" or "Disabled",
+                Lifetime = 2
+            })
+        end
+    }, "HitboxRoll")
+
+    UI.Sections.AntiLock:Toggle({
+        Name = "Show Mobile Button",
+        Default = false,
+        Callback = function(state)
+            mobileGuiVisible = state
+            screenGui.Enabled = toggleMasterEnabled and mobileGuiVisible
+
+            UI.Window:Notify({
+                Title = "Mobile GUI",
+                Description = state and "Shown" or "Hidden",
+                Lifetime = 2
+            })
+        end
+    }, "HitboxRollGuiToggle")
+
+    UI.Sections.AntiLock:Keybind({
+        Name = "Toggle Hitbox Roll Key",
+        Mode = "Toggle",
+        Default = Enum.KeyCode.H,
+        Callback = function()
+            if not toggleMasterEnabled then
+                UI.Window:Notify({
+                    Title = "Hitbox Roll",
+                    Description = "Enable Hitbox Roll first!",
+                    Lifetime = 3
+                })
+                return
+            end
+
+            getgenv().HitboxRoll = not getgenv().HitboxRoll
+            statusLabel.Text = getgenv().HitboxRoll and "⦿ Hitbox Roll: ON" or "⦿ Hitbox Roll: OFF"
+
+            UI.Window:Notify({
+                Title = "Hitbox Roll",
+                Description = getgenv().HitboxRoll and "Enabled (Keybind)" or "Disabled (Keybind)",
+                Lifetime = 3
+            })
+        end
+    }, "HitboxRollKey")
+
+    
+    local orbitRadius, rollSpeed = 4, 1440
+    local flickerAmplitude, spoofYVelocity = 1.5, true
+    local velocityRangeY
+    velocityRangeY = 250
+
+    local originalCFrame, originalVelocity
+
+    RunService.Heartbeat:Connect(function()
+        if getgenv().HitboxRoll then
+            local char = lp.Character
+            if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+
+            local hrp = char.HumanoidRootPart
+            originalCFrame = hrp.CFrame
+            originalVelocity = hrp.AssemblyLinearVelocity
+
+            pcall(function() hrp:SetNetworkOwner(lp) end)
+
+            local angle = tick() * math.pi * 4
+            local orbitOffset = Vector3.new(
+                math.cos(angle) * orbitRadius,
+                math.sin(angle * 1.5) * orbitRadius * 0.5,
+                math.sin(angle) * orbitRadius
+            )
+
+            local flickerOffset = Vector3.new(
+                math.random(-flickerAmplitude * 100, flickerAmplitude * 100) / 100,
+                math.random(-flickerAmplitude * 100, flickerAmplitude * 100) / 100,
+                math.random(-flickerAmplitude * 100, flickerAmplitude * 100) / 100
+            )
+
+            local totalOffset = orbitOffset + flickerOffset
+            local rollAngle = math.rad(tick() * rollSpeed % 360)
+            local rollCF = CFrame.Angles(rollAngle, rollAngle, rollAngle)
+
+            hrp.CFrame = hrp.CFrame * rollCF * CFrame.new(totalOffset)
+
+            if spoofYVelocity then
+                hrp.AssemblyLinearVelocity = Vector3.new(
+                    originalVelocity.X,
+                    math.random(-velocityRangeY, velocityRangeY),
+                    originalVelocity.Z
+                )
+            end
+
+            RunService.RenderStepped:Wait()
+            hrp.CFrame = originalCFrame
+            hrp.AssemblyLinearVelocity = originalVelocity
+        end
+    end)
+
+    
+    local OldIndex
+    OldIndex = hookmetamethod(game, "__index", newcclosure(function(self, key)
+        if getgenv().HitboxRoll and not checkcaller() then
+            if key == "CFrame"
+                and lp.Character
+                and lp.Character:FindFirstChild("HumanoidRootPart")
+                and lp.Character:FindFirstChild("Humanoid")
+                and lp.Character.Humanoid.Health > 0 then
+
+                if self == lp.Character.HumanoidRootPart then
+                    return originalCFrame or CFrame.new()
+                elseif self == lp.Character.Head then
+                    return (originalCFrame or CFrame.new()) + Vector3.new(0, lp.Character.HumanoidRootPart.Size / 2 + 0.5, 0)
+                end
+            end
+        end
+        return OldIndex(self, key)
+    end))
+end)
