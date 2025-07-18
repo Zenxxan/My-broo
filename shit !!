@@ -62,7 +62,7 @@ return {
             dragLabel.Parent = dragHandle
 
             local minimizeBtn = Instance.new("TextButton")
-            minimizeBtn.Text = "🗕"
+            minimizeBtn.Text = "➖"
             minimizeBtn.Font = Enum.Font.GothamBold
             minimizeBtn.TextSize = 14
             minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
