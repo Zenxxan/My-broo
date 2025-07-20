@@ -599,6 +599,7 @@ local function getAimCFrameGun(target)
     return CFrame.new(localRoot.Position, localRoot.Position + prediction.direction)
 end
 
+
 local function createHitDataGun(target)
     local localRoot = GunSilent.State.LocalRoot
     if not target or not target.Character or not localRoot then return nil end
@@ -625,15 +626,16 @@ local function createHitDataGun(target)
             local direction = (finalPosition - startPos).Unit
             local distance = (finalPosition - startPos).Magnitude
             local rayParams = RaycastParams.new()
-            rayParams.FilterDescendantsInstances = {Players.LocalPlayer.Character}
             rayParams.FilterType = Enum.RaycastFilterType.Blacklist
             rayParams.IgnoreWater = true
 
             local currentPos = startPos
             local maxPenetration = 5
+            local penetrated = {}
 
             for p = 1, maxPenetration do
-                local result = workspace:Raycast(currentPos, direction * (distance - (currentPos - startPos).Magnitude), rayParams)
+                rayParams.FilterDescendantsInstances = {Players.LocalPlayer.Character, unpack(penetrated)}
+                local result = workspace:Raycast(currentPos, direction * distance, rayParams)
                 if result then
                     table.insert(bulletHits, {
                         Normal = result.Normal,
@@ -642,13 +644,13 @@ local function createHitDataGun(target)
                         Origin = startPos,
                         Timestamp = timestamp
                     })
+                    table.insert(penetrated, result.Instance)
                     currentPos = result.Position + direction * 0.01
                 else
                     break
                 end
             end
 
-            -- Always add final target (if not already in bulletHits)
             if hitPart then
                 table.insert(bulletHits, {
                     Normal = prediction.direction,
@@ -659,22 +661,18 @@ local function createHitDataGun(target)
                 })
             end
         else
-            -- NON-wallbang single hit
-            bulletHits = {
-                {
-                    Normal = prediction.direction,
-                    Instance = hitPart,
-                    Position = finalPosition,
-                    Origin = startPos,
-                    Timestamp = timestamp
-                }
-            }
+            bulletHits = {{
+                Normal = prediction.direction,
+                Instance = hitPart,
+                Position = finalPosition,
+                Origin = startPos,
+                Timestamp = timestamp
+            }}
         end
 
         hitData[i] = bulletHits
     end
 
-    -- Trails
     if GunSilent.Settings.BulletTrailsEnabled.Value and localRoot and finalPosition then
         local trail = safeCreateInstance("Beam", {
             FaceCamera = true,
@@ -733,6 +731,8 @@ local function createHitDataGun(target)
 
     return hitData
 end
+
+
 
 local function updateTrajectoryBeam(startPos, endPos)
     if not GunSilent.Settings.TrajectoryBeamEnabled.Value then
