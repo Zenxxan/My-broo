@@ -610,7 +610,7 @@ local function createHitDataGun(target)
     local hitPart = targetChar:FindFirstChild(GunSilent.Settings.HitPart.Value)
     if not hitPart then hitPart = targetChar:FindFirstChild("HumanoidRootPart") end
 
-    local finalPosition = prediction.position
+    local finalPosition = hitPart and hitPart.Position or prediction.position
     local startPos = localRoot.Position + Vector3.new(0, 1.5, 0)
 
     local equippedTool = getEquippedGunTool()
@@ -630,7 +630,7 @@ local function createHitDataGun(target)
             rayParams.IgnoreWater = true
 
             local currentPos = startPos
-            local maxPenetration = 5
+            local maxPenetration = 10
             local penetrated = {}
 
             for p = 1, maxPenetration do
@@ -650,16 +650,6 @@ local function createHitDataGun(target)
                     break
                 end
             end
-
-            if hitPart then
-                table.insert(bulletHits, {
-                    Normal = prediction.direction,
-                    Instance = hitPart,
-                    Position = finalPosition,
-                    Origin = startPos,
-                    Timestamp = timestamp
-                })
-            end
         else
             bulletHits = {{
                 Normal = prediction.direction,
@@ -668,6 +658,17 @@ local function createHitDataGun(target)
                 Origin = startPos,
                 Timestamp = timestamp
             }}
+        end
+
+        -- Ensure final player hit is added last
+        if hitPart and (not bulletHits[#bulletHits] or bulletHits[#bulletHits].Instance ~= hitPart) then
+            table.insert(bulletHits, {
+                Normal = prediction.direction,
+                Instance = hitPart,
+                Position = finalPosition,
+                Origin = startPos,
+                Timestamp = timestamp
+            })
         end
 
         hitData[i] = bulletHits
@@ -731,7 +732,6 @@ local function createHitDataGun(target)
 
     return hitData
 end
-
 
 
 local function updateTrajectoryBeam(startPos, endPos)
