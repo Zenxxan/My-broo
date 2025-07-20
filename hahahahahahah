@@ -24,7 +24,7 @@ local GunSilent = {
         BulletTrailsColor = { Value = Color3.fromRGB(147, 112, 219), Default = Color3.fromRGB(147, 112, 219) },
         HitChance = { Value = 100, Default = 100 },
         SortMethod = { Value = "Mouse&Distance", Default = "Mouse&Distance" },
-        WallbangEnabled = { Value = true, Default = true },
+        WallbangEnabled = { Value = false, Default = false },
         ShotgunSupport = { Value = false, Default = false },
         GenBullet = { Value = 4, Default = 4 },
         HitParticlesEnabled = { Value = false, Default = false },
@@ -599,51 +599,136 @@ local function getAimCFrameGun(target)
     return CFrame.new(localRoot.Position, localRoot.Position + prediction.direction)
 end
 
-local function createHitDataGun(predictions)
+local function createHitDataGun(target)
+    local localRoot = GunSilent.State.LocalRoot
+    if not target or not target.Character or not localRoot then return nil end
+    local targetChar = target.Character
+    local prediction = predictTargetPositionGun(target)
+    if not prediction.position or not prediction.direction then return nil end
+
+    local hitPart = targetChar:FindFirstChild(GunSilent.Settings.HitPart.Value)
+    if not hitPart then hitPart = targetChar:FindFirstChild("HumanoidRootPart") end
+
+    local finalPosition = prediction.position
+    local startPos = localRoot.Position + Vector3.new(0, 1.5, 0)
+
+    local equippedTool = getEquippedGunTool()
+    local isShotgunWeapon = GunSilent.Settings.ShotgunSupport.Value and equippedTool and isShotgun(equippedTool)
+    local numBullets = isShotgunWeapon and GunSilent.Settings.GenBullet.Value or 1
     local hitData = {}
 
-    for i, prediction in pairs(predictions) do
-        local startPos = prediction.origin
-        local endPos = prediction.position
-        local direction = (endPos - startPos).Unit
-        local distance = (endPos - startPos).Magnitude
+    local timestamp = tick()
+    for i = 1, numBullets do
+        local bulletHits = {}
 
-        local rayParams = RaycastParams.new()
-        rayParams.FilterType = Enum.RaycastFilterType.Blacklist
-        rayParams.FilterDescendantsInstances = {Players.LocalPlayer.Character}
-        rayParams.IgnoreWater = true
+        if GunSilent.Settings.WallbangEnabled and GunSilent.Settings.WallbangEnabled.Value then
+            -- Wallbang logic with multiple penetrated hits
+            local direction = (finalPosition - startPos).Unit
+            local distance = (finalPosition - startPos).Magnitude
+            local rayParams = RaycastParams.new()
+            rayParams.FilterDescendantsInstances = {Players.LocalPlayer.Character}
+            rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+            rayParams.IgnoreWater = true
 
-        -- Penetration limit
-        local maxPenetration = 5
-        local currentPos = startPos
-        local hitList = {}
+            local currentPos = startPos
+            local maxPenetration = 5
 
-        for p = 1, maxPenetration do
-            local result = workspace:Raycast(currentPos, direction * (distance - (currentPos - startPos).Magnitude), rayParams)
-            if result then
-                table.insert(hitList, {
-                    Normal = result.Normal,
-                    Instance = result.Instance,
-                    Position = result.Position
+            for p = 1, maxPenetration do
+                local result = workspace:Raycast(currentPos, direction * (distance - (currentPos - startPos).Magnitude), rayParams)
+                if result then
+                    table.insert(bulletHits, {
+                        Normal = result.Normal,
+                        Instance = result.Instance,
+                        Position = result.Position,
+                        Origin = startPos,
+                        Timestamp = timestamp
+                    })
+                    currentPos = result.Position + direction * 0.01
+                else
+                    break
+                end
+            end
+
+            -- Final target hit
+            if hitPart then
+                table.insert(bulletHits, {
+                    Normal = prediction.direction,
+                    Instance = hitPart,
+                    Position = finalPosition,
+                    Origin = startPos,
+                    Timestamp = timestamp
                 })
-                currentPos = result.Position + direction * 0.01
-            else
-                break
+            end
+        else
+            -- Normal (non-wallbang) single hit
+            bulletHits = {{
+                Normal = prediction.direction,
+                Instance = hitPart,
+                Position = finalPosition,
+                Origin = startPos,
+                Timestamp = timestamp
+            }}
+        end
+
+        hitData[i] = bulletHits
+    end
+
+    -- Bullet trails
+    if GunSilent.Settings.BulletTrailsEnabled.Value and localRoot and finalPosition then
+        local trail = safeCreateInstance("Beam", {
+            FaceCamera = true,
+            Width0 = 0.1,
+            Width1 = 0.1,
+            Transparency = NumberSequence.new(0),
+            Color = ColorSequence.new(GunSilent.Settings.BulletTrailsColor.Value),
+            Parent = Workspace
+        })
+        if trail then
+            local attachment0 = safeCreateInstance("Attachment", { Parent = Workspace.Terrain })
+            local attachment1 = safeCreateInstance("Attachment", { Parent = Workspace.Terrain })
+            if attachment0 and attachment1 then
+                attachment0.Position = startPos
+                attachment1.Position = finalPosition
+                trail.Attachment0 = attachment0
+                trail.Attachment1 = attachment1
+
+                table.insert(GunSilent.State.BulletTrails, { beam = trail, attachment0 = attachment0, attachment1 = attachment1 })
+
+                local fadeTime = GunSilent.Settings.BulletTrailsFadeTime.Value
+                local startTime = tick()
+                local fadeConnection
+                fadeConnection = RunService.RenderStepped:Connect(function()
+                    local elapsed = tick() - startTime
+                    local t = math.clamp(elapsed / fadeTime, 0, 1)
+                    if trail and trail.Parent then trail.Transparency = NumberSequence.new(t) end
+                    if t >= 1 then
+                        if trail then trail:Destroy() end
+                        if attachment0 then attachment0:Destroy() end
+                        if attachment1 then attachment1:Destroy() end
+                        if fadeConnection then fadeConnection:Disconnect() end
+                        for i, v in ipairs(GunSilent.State.BulletTrails) do
+                            if v.beam == trail then table.remove(GunSilent.State.BulletTrails, i) break end
+                        end
+                        for i, conn in ipairs(GunSilent.State.TrailFadeConnections) do
+                            if conn == fadeConnection then table.remove(GunSilent.State.TrailFadeConnections, i) break end
+                        end
+                    end
+                end)
+                table.insert(GunSilent.State.TrailFadeConnections, fadeConnection)
+
+                if #GunSilent.State.BulletTrails > 20 then
+                    local oldTrail = table.remove(GunSilent.State.BulletTrails, 1)
+                    if oldTrail.beam then oldTrail.beam:Destroy() end
+                    if oldTrail.attachment0 then oldTrail.attachment0:Destroy() end
+                    if oldTrail.attachment1 then oldTrail.attachment1:Destroy() end
+                end
             end
         end
-
-        -- Final target part
-        local targetPart = prediction.part
-        if targetPart then
-            table.insert(hitList, {
-                Normal = direction,
-                Instance = targetPart,
-                Position = prediction.position
-            })
-        end
-
-        hitData[i] = hitList
     end
+
+    GunSilent.State.LastHitTarget = target
+    GunSilent.State.LastHitPosition = finalPosition
+    GunSilent.State.LastShotTime = tick()
 
     return hitData
 end
