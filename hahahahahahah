@@ -1023,11 +1023,9 @@ local function Init(UI, Core, notify)
                 element = combatSection:Toggle({
                     Name = "Wallbang",
                     Default = GunSilent.Settings.WallbangEnabled.Value,
-                    Callback = function(value)
-                    GunSilent.Settings.WallbangEnabled.Value = value end
+                    Callback = function(value) GunSilent.Settings.WallbangEnabled.Value = value end
                 }, 'Wallbang'),
-                callback = function(value)
-                GunSilent.Settings.WallbangEnabled.Value = value end
+                callback = function(value) GunSilent.Settings.WallbangEnabled.Value = value end
             }
             CombatElements.ShotgunSupport = {
                 element = combatSection:Toggle({
