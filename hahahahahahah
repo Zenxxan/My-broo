@@ -622,7 +622,6 @@ local function createHitDataGun(target)
         local bulletHits = {}
 
         if GunSilent.Settings.WallbangEnabled and GunSilent.Settings.WallbangEnabled.Value then
-            -- Wallbang logic with multiple penetrated hits
             local direction = (finalPosition - startPos).Unit
             local distance = (finalPosition - startPos).Magnitude
             local rayParams = RaycastParams.new()
@@ -649,7 +648,7 @@ local function createHitDataGun(target)
                 end
             end
 
-            -- Final target hit
+            -- Always add final target (if not already in bulletHits)
             if hitPart then
                 table.insert(bulletHits, {
                     Normal = prediction.direction,
@@ -660,20 +659,22 @@ local function createHitDataGun(target)
                 })
             end
         else
-            -- Normal (non-wallbang) single hit
-            bulletHits = {{
-                Normal = prediction.direction,
-                Instance = hitPart,
-                Position = finalPosition,
-                Origin = startPos,
-                Timestamp = timestamp
-            }}
+            -- NON-wallbang single hit
+            bulletHits = {
+                {
+                    Normal = prediction.direction,
+                    Instance = hitPart,
+                    Position = finalPosition,
+                    Origin = startPos,
+                    Timestamp = timestamp
+                }
+            }
         end
 
         hitData[i] = bulletHits
     end
 
-    -- Bullet trails
+    -- Trails
     if GunSilent.Settings.BulletTrailsEnabled.Value and localRoot and finalPosition then
         local trail = safeCreateInstance("Beam", {
             FaceCamera = true,
@@ -732,7 +733,6 @@ local function createHitDataGun(target)
 
     return hitData
 end
-
 
 local function updateTrajectoryBeam(startPos, endPos)
     if not GunSilent.Settings.TrajectoryBeamEnabled.Value then
