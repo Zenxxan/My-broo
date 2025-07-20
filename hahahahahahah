@@ -599,7 +599,6 @@ local function getAimCFrameGun(target)
     return CFrame.new(localRoot.Position, localRoot.Position + prediction.direction)
 end
 
-local 
 local function createHitDataGun(predictions)
     local hitData = {}
 
