@@ -865,7 +865,10 @@ local function initializeGunSilent()
                         local aimCFrame = getAimCFrameGun(nearestPlayer)
                         local hitData = createHitDataGun(nearestPlayer)
                         if aimCFrame and hitData then
-                            modifiedArgs = {args[1], args[2], equippedTool, aimCFrame, hitData}
+                            for _, bullet in ipairs(hitData) do
+                                GunSilent.State.OldFireServer(self, args[1], args[2], equippedTool, aimCFrame, {bullet})
+                            end
+                            modifiedArgs = {args[1], args[2], equippedTool, aimCFrame, {hitData[1]}}
                             GunSilent.State.PendingHits[args[1]] = {
                                 target = nearestPlayer,
                                 position = GunSilent.State.LastHitPosition
