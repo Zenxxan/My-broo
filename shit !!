@@ -191,7 +191,6 @@ return {
             local velocityRangeY = 250
             local originalCFrame, originalVelocity
 
-            -- ✅ Lag-optimized heartbeat loop
             RunService.Heartbeat:Connect(function()
                 if not getgenv().HitboxRoll then return end
 
@@ -204,9 +203,12 @@ return {
                 originalCFrame = hrp.CFrame
                 originalVelocity = hrp.AssemblyLinearVelocity
 
-                pcall(function()
+                local success = pcall(function()
                     hrp:SetNetworkOwner(lp)
                 end)
+                if not success then
+                    pcall(function() hrp:SetNetworkOwner(nil) end)
+                end
 
                 local now = tick()
                 local angle = now * math.pi * 4
@@ -226,18 +228,20 @@ return {
                 local rollAngle = math.rad(now * rollSpeed % 360)
                 local rollCF = CFrame.Angles(rollAngle, rollAngle, rollAngle)
 
-                hrp.CFrame = hrp.CFrame * rollCF * CFrame.new(totalOffset)
+                local newCF = hrp.CFrame * rollCF * CFrame.new(totalOffset)
+                char:PivotTo(newCF)
 
                 if spoofYVelocity then
+                    local spoofY = math.clamp(math.random(-velocityRangeY, velocityRangeY), -120, 120)
                     hrp.AssemblyLinearVelocity = Vector3.new(
                         originalVelocity.X,
-                        math.random(-velocityRangeY, velocityRangeY),
+                        spoofY,
                         originalVelocity.Z
                     )
                 end
 
                 RunService.RenderStepped:Wait()
-                hrp.CFrame = originalCFrame
+                char:PivotTo(originalCFrame)
                 hrp.AssemblyLinearVelocity = originalVelocity
             end)
 
