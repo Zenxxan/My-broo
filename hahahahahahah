@@ -1068,7 +1068,7 @@ local function Init(UI, Core, notify)
                     Minimum = 1,
                     Maximum = 10,
                     Precision = 0,
-                   Callback = function(value) GunSilent.Settings.RageShotAmount.Value = valueend
+                   Callback = function(value) GunSilent.Settings.RageShotAmount.Value = value end
                 }, 'RageShotAmount'),
                 callback = function(value)GunSilent.Settings.RageShotAmount.Value = value end
             }
@@ -1150,7 +1150,6 @@ local function Init(UI, Core, notify)
             }
         end
     end
-
     if UI.Tabs.Visuals then
         local bulletTrailsSection = UI.Tabs.Visuals:Section({ Side = "Right", Name = "Bullet Trails" })
         if bulletTrailsSection then
