@@ -24,7 +24,7 @@ local GunSilent = {
         BulletTrailsColor = { Value = Color3.fromRGB(147, 112, 219), Default = Color3.fromRGB(147, 112, 219) },
         HitChance = { Value = 100, Default = 100 },
         SortMethod = { Value = "Mouse&Distance", Default = "Mouse&Distance" },
-        RageShotAmount = { Value = 1, Default = 1, Max = 10 }
+        RageShotAmount = { Value = 1, Default = 1, Max = 10 },
         ShotgunSupport = { Value = false, Default = false },
         GenBullet = { Value = 4, Default = 4 },
         HitParticlesEnabled = { Value = false, Default = false },
@@ -1068,9 +1068,9 @@ local function Init(UI, Core, notify)
                     Minimum = 1,
                     Maximum = 10,
                     Precision = 0,
-                   Callback = function(value) GunSilent.Settings.RageShotAmount.Value = value end
+                    Callback = function(value) GunSilent.Settings.RageShotAmount.Value = value end
                 }, 'RageShotAmount'),
-                callback = function(value)GunSilent.Settings.RageShotAmount.Value = value end
+                callback = function(value) GunSilent.Settings.RageShotAmount.Value = value end
             }
             CombatElements.ShotgunSupport = {
                 element = combatSection:Toggle({
