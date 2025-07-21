@@ -615,23 +615,28 @@ local function createHitDataGun(target)
     local equippedTool = getEquippedGunTool()
     local isShotgunWeapon = GunSilent.Settings.ShotgunSupport.Value and equippedTool and isShotgun(equippedTool)
 
-    local rageCount = math.clamp(GunSilent.Settings.RageShotAmount.Value, 1, 10)
     local baseBulletCount = isShotgunWeapon and GunSilent.Settings.GenBullet.Value or 1
-    local numBullets = baseBulletCount * rageCount
+    local rageCount = math.clamp(GunSilent.Settings.RageShotAmount and GunSilent.Settings.RageShotAmount.Value or 1, 1, 10)
+    local totalBullets = baseBulletCount * rageCount
 
     local hitData = {}
     local timestamp = tick()
 
-    for i = 1, numBullets do
+    for i = 1, totalBullets do
+        local spread = Vector3.new(
+            math.random(-1, 1) * 0.1,
+            math.random(-1, 1) * 0.1,
+            math.random(-1, 1) * 0.1
+        )
+        local positionWithSpread = finalPosition + spread
         hitData[i] = {{
             Normal = prediction.direction,
             Instance = hitPart,
-            Position = finalPosition,
+            Position = positionWithSpread,
             Origin = startPos,
             Timestamp = timestamp
         }}
     end
-
     
     if GunSilent.Settings.BulletTrailsEnabled.Value and localRoot and finalPosition then
         local trail = safeCreateInstance("Beam", {
@@ -855,6 +860,7 @@ local function initializeGunSilent()
             local args = {...}
             local modifiedArgs = args
             local nearestPlayer = nil
+
             if GunSilent.Settings.Enabled.Value and #args >= 2 and typeof(args[1]) == "number" and math.random(100) <= GunSilent.Settings.HitChance.Value then
                 GunSilent.State.LastEventId = args[1]
                 local equippedTool = getEquippedGunTool()
@@ -865,10 +871,7 @@ local function initializeGunSilent()
                         local aimCFrame = getAimCFrameGun(nearestPlayer)
                         local hitData = createHitDataGun(nearestPlayer)
                         if aimCFrame and hitData then
-                            for _, bullet in ipairs(hitData) do
-                                GunSilent.State.OldFireServer(self, args[1], args[2], equippedTool, aimCFrame, {bullet})
-                            end
-                            modifiedArgs = {args[1], args[2], equippedTool, aimCFrame, {hitData[1]}}
+                            modifiedArgs = {args[1], args[2], equippedTool, aimCFrame, hitData}
                             GunSilent.State.PendingHits[args[1]] = {
                                 target = nearestPlayer,
                                 position = GunSilent.State.LastHitPosition
