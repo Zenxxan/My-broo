@@ -24,7 +24,7 @@ local GunSilent = {
         BulletTrailsColor = { Value = Color3.fromRGB(147, 112, 219), Default = Color3.fromRGB(147, 112, 219) },
         HitChance = { Value = 100, Default = 100 },
         SortMethod = { Value = "Mouse&Distance", Default = "Mouse&Distance" },
-        RageShotAmount = { Value = 1, Default = 1, Max = 10 },
+       RageShotAmount = { Value = 1, Default = 1 },
         ShotgunSupport = { Value = false, Default = false },
         GenBullet = { Value = 4, Default = 4 },
         HitParticlesEnabled = { Value = false, Default = false },
@@ -599,7 +599,8 @@ local function getAimCFrameGun(target)
     return CFrame.new(localRoot.Position, localRoot.Position + prediction.direction)
 end
 
-local function createHitDataGun(target)
+
+   local function createHitDataGun(target)
     local localRoot = GunSilent.State.LocalRoot
     if not target or not target.Character or not localRoot then return nil end
     local targetChar = target.Character
@@ -613,29 +614,31 @@ local function createHitDataGun(target)
     local startPos = localRoot.Position + Vector3.new(0, 1.5, 0)
 
     local equippedTool = getEquippedGunTool()
-    local isShotgunWeapon = GunSilent.Settings.ShotgunSupport.Value and equippedTool and isShotgun(equippedTool)
+    local baseMultishot = equippedTool and equippedTool:GetAttribute("Multishot") or 1
+    local rageShots = GunSilent.Settings.RageShotAmount and GunSilent.Settings.RageShotAmount.Value or 1
 
-    local baseBulletCount = isShotgunWeapon and GunSilent.Settings.GenBullet.Value or 1
-    local rageCount = math.clamp(GunSilent.Settings.RageShotAmount and GunSilent.Settings.RageShotAmount.Value or 1, 1, 10)
-    local totalBullets = baseBulletCount * rageCount
+    rageShots = math.clamp(rageShots, 1, 10)
+    baseMultishot = math.clamp(baseMultishot, 1, 10)
 
     local hitData = {}
     local timestamp = tick()
 
-    for i = 1, totalBullets do
-        local spread = Vector3.new(
-            math.random(-1, 1) * 0.1,
-            math.random(-1, 1) * 0.1,
-            math.random(-1, 1) * 0.1
-        )
-        local positionWithSpread = finalPosition + spread
-        hitData[i] = {{
-            Normal = prediction.direction,
-            Instance = hitPart,
-            Position = positionWithSpread,
-            Origin = startPos,
-            Timestamp = timestamp
-        }}
+    for i = 1, rageShots do
+        for j = 1, baseMultishot do
+            local spread = Vector3.new(
+                math.random(-1, 1) * 0.1,
+                math.random(-1, 1) * 0.1,
+                math.random(-1, 1) * 0.1
+            )
+            local index = #hitData + 1
+            hitData[index] = {{
+                Normal = prediction.direction,
+                Instance = hitPart,
+                Position = finalPosition + spread,
+                Origin = startPos,
+                Timestamp = timestamp
+            }}
+        end
     end
     
     if GunSilent.Settings.BulletTrailsEnabled.Value and localRoot and finalPosition then
