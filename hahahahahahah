@@ -618,26 +618,25 @@ local function createHitDataGun(target)
     local hitData = {}
 
     local timestamp = tick()
+
     for i = 1, numBullets do
-        if GunSilent.Settings.WallbangEnabled and GunSilent.Settings.WallbangEnabled.Value then
-            hitData[i] = {{
-                Normal = prediction.direction,
-                Instance = hitPart,
-                Position = finalPosition,
-                Origin = startPos,
-                Timestamp = timestamp
-            }}
-        else
-            hitData[i] = {{
-                Normal = prediction.direction,
-                Instance = hitPart,
-                Position = finalPosition,
-                Origin = startPos,
-                Timestamp = timestamp
-            }}
-        end
+        hitData[i] = {{
+            Normal = prediction.direction,
+            Instance = hitPart,
+            Position = finalPosition,
+            Origin = startPos,
+            Timestamp = timestamp
+        }}
     end
 
+    
+    if GunSilent.Settings.WallbangEnabled.Value then
+        GunSilent.State.LastShootCFrame = CFrame.new()
+    else
+        GunSilent.State.LastShootCFrame = CFrame.lookAt(startPos, finalPosition)
+    end
+
+    
     if GunSilent.Settings.BulletTrailsEnabled.Value and localRoot and finalPosition then
         local trail = safeCreateInstance("Beam", {
             FaceCamera = true,
