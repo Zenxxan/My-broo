@@ -24,7 +24,7 @@ local GunSilent = {
         BulletTrailsColor = { Value = Color3.fromRGB(147, 112, 219), Default = Color3.fromRGB(147, 112, 219) },
         HitChance = { Value = 100, Default = 100 },
         SortMethod = { Value = "Mouse&Distance", Default = "Mouse&Distance" },
-       RageShotAmount = { Value = 1, Default = 1 },
+        WallbangEnabled = { Value = false, Default = false },
         ShotgunSupport = { Value = false, Default = false },
         GenBullet = { Value = 4, Default = 4 },
         HitParticlesEnabled = { Value = false, Default = false },
@@ -599,8 +599,7 @@ local function getAimCFrameGun(target)
     return CFrame.new(localRoot.Position, localRoot.Position + prediction.direction)
 end
 
-
-   local function createHitDataGun(target)
+local function createHitDataGun(target)
     local localRoot = GunSilent.State.LocalRoot
     if not target or not target.Character or not localRoot then return nil end
     local targetChar = target.Character
@@ -614,33 +613,31 @@ end
     local startPos = localRoot.Position + Vector3.new(0, 1.5, 0)
 
     local equippedTool = getEquippedGunTool()
-    local baseMultishot = equippedTool and equippedTool:GetAttribute("Multishot") or 1
-    local rageShots = GunSilent.Settings.RageShotAmount and GunSilent.Settings.RageShotAmount.Value or 1
-
-    rageShots = math.clamp(rageShots, 1, 10)
-    baseMultishot = math.clamp(baseMultishot, 1, 10)
-
+    local isShotgunWeapon = GunSilent.Settings.ShotgunSupport.Value and equippedTool and isShotgun(equippedTool)
+    local numBullets = isShotgunWeapon and GunSilent.Settings.GenBullet.Value or 1
     local hitData = {}
-    local timestamp = tick()
 
-    for i = 1, rageShots do
-        for j = 1, baseMultishot do
-            local spread = Vector3.new(
-                math.random(-1, 1) * 0.1,
-                math.random(-1, 1) * 0.1,
-                math.random(-1, 1) * 0.1
-            )
-            local index = #hitData + 1
-            hitData[index] = {{
+    local timestamp = tick()
+    for i = 1, numBullets do
+        if GunSilent.Settings.WallbangEnabled and GunSilent.Settings.WallbangEnabled.Value then
+            hitData[i] = {{
                 Normal = prediction.direction,
                 Instance = hitPart,
-                Position = finalPosition + spread,
+                Position = finalPosition,
+                Origin = startPos,
+                Timestamp = timestamp
+            }}
+        else
+            hitData[i] = {{
+                Normal = prediction.direction,
+                Instance = hitPart,
+                Position = finalPosition,
                 Origin = startPos,
                 Timestamp = timestamp
             }}
         end
     end
-    
+
     if GunSilent.Settings.BulletTrailsEnabled.Value and localRoot and finalPosition then
         local trail = safeCreateInstance("Beam", {
             FaceCamera = true,
@@ -863,7 +860,6 @@ local function initializeGunSilent()
             local args = {...}
             local modifiedArgs = args
             local nearestPlayer = nil
-
             if GunSilent.Settings.Enabled.Value and #args >= 2 and typeof(args[1]) == "number" and math.random(100) <= GunSilent.Settings.HitChance.Value then
                 GunSilent.State.LastEventId = args[1]
                 local equippedTool = getEquippedGunTool()
@@ -1070,16 +1066,13 @@ local function Init(UI, Core, notify)
                 }, 'HitPart'),
                 callback = function(value) GunSilent.Settings.HitPart.Value = value end
             }
-            CombatElements.RageShotAmount = {
-                element = combatSection:Slider({
-                    Name = "Rage Shot Amount",
-                    Default = GunSilent.Settings.RageShotAmount.Value,
-                    Minimum = 1,
-                    Maximum = 10,
-                    Precision = 0,
-                    Callback = function(value) GunSilent.Settings.RageShotAmount.Value = value end
-                }, 'RageShotAmount'),
-                callback = function(value) GunSilent.Settings.RageShotAmount.Value = value end
+            CombatElements.Wallbang = {
+               element = combatSection:Toggle({
+                   Name = "Wallbang",
+                   Default = GunSilent.Settings.WallbangEnabled.Value,
+                   Callback = function(value) GunSilent.Settings.WallbangEnabled.Value = value end
+                }, 'Wallbang'),
+                callback = function(value) GunSilent.Settings.WallbangEnabled.Value = value end
             }
             CombatElements.ShotgunSupport = {
                 element = combatSection:Toggle({
@@ -1159,6 +1152,7 @@ local function Init(UI, Core, notify)
             }
         end
     end
+
     if UI.Tabs.Visuals then
         local bulletTrailsSection = UI.Tabs.Visuals:Section({ Side = "Right", Name = "Bullet Trails" })
         if bulletTrailsSection then
@@ -1494,7 +1488,7 @@ local function Init(UI, Core, notify)
                 for option, selected in pairs(hitPartOptions) do
                     if selected then CombatElements.HitPart.callback(option) break end
                 end
-                CombatElements.RageShotAmount.callback(CombatElements.RageShotAmount.element:GetValue())
+                CombatElements.WallbangEnabled.callback(CombatElements.WallbangEnabled.element:GetState())
                 CombatElements.ShotgunSupport.callback(CombatElements.ShotgunSupport.element:GetState())
                 CombatElements.GenerateBullets.callback(CombatElements.GenerateBullets.element:GetValue())
                 local sortMethodOptions = CombatElements.SortMethod.element:GetOptions()
