@@ -1,11 +1,13 @@
 return {
     Init = function(UI, Core, Notify)
         task.defer(function()
-            repeat task.wait() until UI and UI.Sections and UI.Tabs and UI.Tabs.LocalPlayer
+            repeat
+                task.wait()
+            until UI and UI.Sections and UI.Tabs and UI.Tabs.LocalPlayer
 
-            local Players = game:GetService("Players")
-            local UIS = game:GetService("UserInputService")
-            local RunService = game:GetService("RunService")
+            local Players = game:GetService('Players')
+            local UIS = game:GetService('UserInputService')
+            local RunService = game:GetService('RunService')
             local lp = Players.LocalPlayer
 
             getgenv().HitboxRoll = false
@@ -13,18 +15,18 @@ return {
             local mobileGuiVisible = false
             local minimized = false
 
-            UI.Sections.AntiLock:Header({ Name = "Hitbox Roll" })
+            UI.Sections.AntiLock:Header({ Name = 'Hitbox Roll' })
 
-            local screenGui = Instance.new("ScreenGui")
-            screenGui.Name = "HitboxRollGui"
+            local screenGui = Instance.new('ScreenGui')
+            screenGui.Name = 'HitboxRollGui'
             screenGui.ResetOnSpawn = false
             screenGui.Enabled = false
             pcall(function()
-                screenGui.Parent = game:GetService("CoreGui")
+                screenGui.Parent = game:GetService('CoreGui')
             end)
 
-            local mainFrame = Instance.new("Frame")
-            mainFrame.Name = "Main"
+            local mainFrame = Instance.new('Frame')
+            mainFrame.Name = 'Main'
             mainFrame.Size = UDim2.new(0, 200, 0, 100)
             mainFrame.Position = UDim2.new(0.5, -100, 0.8, 0)
             mainFrame.BackgroundColor3 = Color3.fromRGB(23, 32, 46)
@@ -33,15 +35,15 @@ return {
             mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
             mainFrame.Parent = screenGui
 
-            local corner = Instance.new("UICorner", mainFrame)
+            local corner = Instance.new('UICorner', mainFrame)
             corner.CornerRadius = UDim.new(0, 10)
 
-            local stroke = Instance.new("UIStroke", mainFrame)
+            local stroke = Instance.new('UIStroke', mainFrame)
             stroke.Color = Color3.fromRGB(80, 130, 255)
             stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
-            local dragHandle = Instance.new("Frame")
-            dragHandle.Name = "DragHandle"
+            local dragHandle = Instance.new('Frame')
+            dragHandle.Name = 'DragHandle'
             dragHandle.Size = UDim2.new(1, 0, 0, 20)
             dragHandle.Position = UDim2.new(0, 0, 0, 0)
             dragHandle.BackgroundColor3 = Color3.fromRGB(17, 24, 34)
@@ -49,8 +51,8 @@ return {
             dragHandle.BorderSizePixel = 0
             dragHandle.Parent = mainFrame
 
-            local dragLabel = Instance.new("TextLabel")
-            dragLabel.Text = "➕"
+            local dragLabel = Instance.new('TextLabel')
+            dragLabel.Text = '➕'
             dragLabel.Font = Enum.Font.GothamBold
             dragLabel.TextSize = 14
             dragLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -61,8 +63,8 @@ return {
             dragLabel.TextYAlignment = Enum.TextYAlignment.Center
             dragLabel.Parent = dragHandle
 
-            local minimizeBtn = Instance.new("TextButton")
-            minimizeBtn.Text = "➖"
+            local minimizeBtn = Instance.new('TextButton')
+            minimizeBtn.Text = '➖'
             minimizeBtn.Font = Enum.Font.GothamBold
             minimizeBtn.TextSize = 14
             minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -72,8 +74,8 @@ return {
             minimizeBtn.TextXAlignment = Enum.TextXAlignment.Center
             minimizeBtn.Parent = dragHandle
 
-            local title = Instance.new("TextLabel")
-            title.Text = "Hitbox Roll"
+            local title = Instance.new('TextLabel')
+            title.Text = 'Hitbox Roll'
             title.Font = Enum.Font.GothamBold
             title.TextSize = 16
             title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -83,8 +85,8 @@ return {
             title.TextXAlignment = Enum.TextXAlignment.Left
             title.Parent = mainFrame
 
-            local statusLabel = Instance.new("TextButton")
-            statusLabel.Text = "⦿ Hitbox Roll: OFF"
+            local statusLabel = Instance.new('TextButton')
+            statusLabel.Text = '⦿ Hitbox Roll: OFF'
             statusLabel.Font = Enum.Font.Gotham
             statusLabel.TextSize = 14
             statusLabel.TextColor3 = Color3.fromRGB(200, 220, 255)
@@ -93,13 +95,14 @@ return {
             statusLabel.Size = UDim2.new(1, -20, 0, 40)
             statusLabel.TextXAlignment = Enum.TextXAlignment.Left
             statusLabel.Parent = mainFrame
-            Instance.new("UICorner", statusLabel).CornerRadius = UDim.new(0, 6)
+            Instance.new('UICorner', statusLabel).CornerRadius = UDim.new(0, 6)
 
             minimizeBtn.MouseButton1Click:Connect(function()
                 minimized = not minimized
                 statusLabel.Visible = not minimized
-                mainFrame.Size = minimized and UDim2.new(0, 200, 0, 30) or UDim2.new(0, 200, 0, 100)
-                minimizeBtn.Text = minimized and "⿻" or "➖"
+                mainFrame.Size = minimized and UDim2.new(0, 200, 0, 30)
+                    or UDim2.new(0, 200, 0, 100)
+                minimizeBtn.Text = minimized and '⿻' or '➖'
             end)
 
             local dragging = false
@@ -107,7 +110,14 @@ return {
             local inputConn
 
             local function onInputChanged(input)
-                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                if
+                    dragging
+                    and (
+                        input.UserInputType
+                            == Enum.UserInputType.MouseMovement
+                        or input.UserInputType == Enum.UserInputType.Touch
+                    )
+                then
                     local delta = input.Position - dragStart
                     mainFrame.Position = UDim2.new(
                         startPos.X.Scale,
@@ -120,15 +130,23 @@ return {
 
             local function onInputEnded()
                 dragging = false
-                if inputConn then inputConn:Disconnect() inputConn = nil end
+                if inputConn then
+                    inputConn:Disconnect()
+                    inputConn = nil
+                end
             end
 
             dragHandle.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                if
+                    input.UserInputType == Enum.UserInputType.MouseButton1
+                    or input.UserInputType == Enum.UserInputType.Touch
+                then
                     dragging = true
                     dragStart = input.Position
                     startPos = mainFrame.Position
-                    if inputConn then inputConn:Disconnect() end
+                    if inputConn then
+                        inputConn:Disconnect()
+                    end
                     inputConn = input.Changed:Connect(function()
                         if input.UserInputState == Enum.UserInputState.End then
                             onInputEnded()
@@ -141,96 +159,174 @@ return {
 
             statusLabel.MouseButton1Click:Connect(function()
                 if not toggleMasterEnabled then
-                    Notify("Hitbox Roll", "Enable from toggle first!", 2)
+                    Notify('Hitbox Roll', 'Enable from toggle first!', 2)
                     return
                 end
                 getgenv().HitboxRoll = not getgenv().HitboxRoll
-                statusLabel.Text = getgenv().HitboxRoll and "⦿ Hitbox Roll: ON" or "⦿ Hitbox Roll: OFF"
-                Notify("Hitbox Roll", getgenv().HitboxRoll and "Enabled (Mobile)" or "Disabled (Mobile)", 2)
+                statusLabel.Text = getgenv().HitboxRoll
+                        and '⦿ Hitbox Roll: ON'
+                    or '⦿ Hitbox Roll: OFF'
+                Notify(
+                    'Hitbox Roll',
+                    getgenv().HitboxRoll and 'Enabled (Mobile)'
+                        or 'Disabled (Mobile)',
+                    2
+                )
             end)
 
             UI.Sections.AntiLock:Toggle({
-                Name = "Hitbox Roll",
+                Name = 'Hitbox Roll',
                 Default = false,
                 Callback = function(state)
                     toggleMasterEnabled = state
                     getgenv().HitboxRoll = false
                     screenGui.Enabled = toggleMasterEnabled and mobileGuiVisible
-                    statusLabel.Text = "⦿ Hitbox Roll: OFF"
-                    Notify("Hitbox Roll", state and "Ready for Mobile Use" or "Disabled", 2)
-                end
-            }, "HitboxRoll")
+                    statusLabel.Text = '⦿ Hitbox Roll: OFF'
+                    Notify(
+                        'Hitbox Roll',
+                        state and 'Ready for Mobile Use' or 'Disabled',
+                        2
+                    )
+                end,
+            }, 'HitboxRoll')
 
             UI.Sections.AntiLock:Toggle({
-                Name = "Show Mobile Gui",
+                Name = 'Show Mobile Gui',
                 Default = false,
                 Callback = function(state)
                     mobileGuiVisible = state
                     screenGui.Enabled = toggleMasterEnabled and mobileGuiVisible
-                    Notify("Mobile GUI", state and "Shown" or "Hidden", 2)
-                end
-            }, "HitboxRollGuiToggle")
+                    Notify('Mobile GUI', state and 'Shown' or 'Hidden', 2)
+                end,
+            }, 'HitboxRollGuiToggle')
 
             UI.Sections.AntiLock:Keybind({
-                Name = "Toggle Hitbox Roll Key",
-                Mode = "Toggle",
+                Name = 'Toggle Hitbox Roll Key',
+                Mode = 'Toggle',
                 Default = Enum.KeyCode.H,
                 Callback = function()
                     if not toggleMasterEnabled then
-                        Notify("Hitbox Roll", "Enable Hitbox Roll first!", 2)
+                        Notify('Hitbox Roll', 'Enable Hitbox Roll first!', 2)
                         return
                     end
                     getgenv().HitboxRoll = not getgenv().HitboxRoll
-                    statusLabel.Text = getgenv().HitboxRoll and "⦿ Hitbox Roll: ON" or "⦿ Hitbox Roll: OFF"
-                    Notify("Hitbox Roll", getgenv().HitboxRoll and "Enabled (Keybind)" or "Disabled (Keybind)", 2)
-                end
-            }, "HitboxRollKey")
-
+                    statusLabel.Text = getgenv().HitboxRoll
+                            and '⦿ Hitbox Roll: ON'
+                        or '⦿ Hitbox Roll: OFF'
+                    Notify(
+                        'Hitbox Roll',
+                        getgenv().HitboxRoll and 'Enabled (Keybind)'
+                            or 'Disabled (Keybind)',
+                        2
+                    )
+                end,
+            }, 'HitboxRollKey')
 
             local lastUpdate = 0
             local updateInterval = 0.03
+
             local velocityPatterns = {
-                {X = 50, Y = 120, Z = 30},
-                {X = -30, Y = -80, Z = 50}, 
-                {X = 70, Y = 150, Z = -40},
-                {X = -50, Y = -120, Z = -30},
-                {X = 25, Y = 200, Z = 60},
-                {X = 80, Y = -150, Z = 40},
-                {X = -70, Y = 180, Z = -60},
-                {X = 40, Y = -200, Z = 70}
+                function(now)
+                    return Vector3.new(
+                        math.random(-200, 200),
+                        math.random(-300, 300),
+                        math.random(-200, 200)
+                    )
+                end,
+                function(now)
+                    return Vector3.new(
+                        math.sin(now * 20) * 150,
+                        math.cos(now * 15) * 200,
+                        math.tan(now * 25) * 100
+                    )
+                end,
+                function(now)
+                    return Vector3.new(
+                        now % 100 * 3,
+                        (now * 2) % 150 * 2,
+                        (now * 1.5) % 120 * 2.5
+                    )
+                end,
+                function(now)
+                    return Vector3.new(
+                        math.random(-180, 180),
+                        math.random(-250, 250),
+                        math.random(-180, 180)
+                    )
+                end,
+                function(now)
+                    return Vector3.new(
+                        math.noise(now, 0, 0) * 200,
+                        math.noise(0, now, 0) * 250,
+                        math.noise(0, 0, now) * 180
+                    )
+                end,
             }
-            
+
+            local predictionBreakers = {
+                function(vel)
+                    return vel * -1.5
+                end,
+                function(vel)
+                    return vel * math.random(0.3, 2.5)
+                end,
+                function(vel)
+                    return Vector3.new(vel.Z, vel.X, vel.Y)
+                end,
+                function(vel)
+                    return Vector3.new(
+                        math.random(-150, 150),
+                        math.random(-200, 200),
+                        math.random(-150, 150)
+                    )
+                end,
+                function(vel)
+                    return Vector3.zero
+                end,
+            }
+
             local currentPattern = 1
+            local currentBreaker = 1
             local patternChangeTime = 0
-            local patternChangeInterval = 0.2 
-            
+            local breakerChangeTime = 0
+            local patternChangeInterval = 0.1 
+            local breakerChangeInterval = 0.08 
+
+            local orbitRadius, rollSpeed = 4, 1440
+            local flickerAmplitude = 1.5
             local originalCFrame, originalVelocity
             local networkOwnershipSet = false
+            local lastVelocity = Vector3.zero
 
             RunService.Heartbeat:Connect(function()
-                if not getgenv().HitboxRoll then 
+                if not getgenv().HitboxRoll then
                     networkOwnershipSet = false
-                    return 
+                    return
                 end
 
                 local now = tick()
-                if now - lastUpdate < updateInterval then return end
+                if now - lastUpdate < updateInterval then
+                    return
+                end
                 lastUpdate = now
 
                 local char = lp.Character
-                if not char then return end
+                if not char then
+                    return
+                end
 
-                local hrp = char:FindFirstChild("HumanoidRootPart")
-                local humanoid = char:FindFirstChildOfClass("Humanoid")
-                if not hrp or not humanoid or humanoid.Health <= 0 then return end
+                local hrp = char:FindFirstChild('HumanoidRootPart')
+                if not hrp then
+                    return
+                end
 
                 if not networkOwnershipSet then
-                    local success = pcall(function()
+                    pcall(function()
                         hrp:SetNetworkOwner(lp)
                     end)
-                    if not success then
-                        pcall(function() hrp:SetNetworkOwner(nil) end)
-                    end
+                    pcall(function()
+                        hrp:SetNetworkOwner(nil)
+                    end)
                     networkOwnershipSet = true
                 end
 
@@ -239,36 +335,46 @@ return {
 
                 if now - patternChangeTime > patternChangeInterval then
                     patternChangeTime = now
-                    currentPattern = (currentPattern % #velocityPatterns) + 1
+                    currentPattern = math.random(1, #velocityPatterns)
                 end
 
-                local pattern = velocityPatterns[currentPattern]
-                local spoofedVelocity = Vector3.new(
-                    pattern.X + math.random(-25, 25),
-                    pattern.Y + math.random(-40, 40), 
-                    pattern.Z + math.random(-25, 25)
-                )
-                hrp.AssemblyLinearVelocity = spoofedVelocity
+                if now - breakerChangeTime > breakerChangeInterval then
+                    breakerChangeTime = now
+                    currentBreaker = math.random(1, #predictionBreakers)
+                end
 
-                local angle = now * math.pi * 3 
+                local angle = now * math.pi * 4
                 local orbitOffset = Vector3.new(
-                    math.cos(angle) * 3, 
-                    math.sin(angle * 1.2) * 1.5, 
-                    math.sin(angle) * 3 
+                    math.cos(angle) * orbitRadius,
+                    math.sin(angle * 1.5) * orbitRadius * 0.5,
+                    math.sin(angle) * orbitRadius
                 )
 
                 local flickerOffset = Vector3.new(
-                    math.random(-100, 100) / 100, 
-                    math.random(-100, 100) / 100,
-                    math.random(-100, 100) / 100
+                    math.random(-150, 150) / 100,
+                    math.random(-150, 150) / 100,
+                    math.random(-150, 150) / 100
                 )
 
                 local totalOffset = orbitOffset + flickerOffset
-                local rollAngle = math.rad(now * 1000 % 360) 
+                local rollAngle = math.rad(now * rollSpeed % 360)
                 local rollCF = CFrame.Angles(rollAngle, rollAngle, rollAngle)
 
                 local newCF = hrp.CFrame * rollCF * CFrame.new(totalOffset)
                 char:PivotTo(newCF)
+                local baseVelocity = velocityPatterns[currentPattern](now)
+                local brokenVelocity =
+                    predictionBreakers[currentBreaker](baseVelocity)
+
+                local finalVelocity = brokenVelocity
+                    + Vector3.new(
+                        math.random(-25, 25),
+                        math.random(-35, 35),
+                        math.random(-25, 25)
+                    )
+
+                hrp.AssemblyLinearVelocity = finalVelocity
+                lastVelocity = finalVelocity
 
                 task.defer(function()
                     if char and hrp then
@@ -279,23 +385,34 @@ return {
             end)
 
             local OldIndex
-            OldIndex = hookmetamethod(game, "__index", newcclosure(function(self, key)
-                if getgenv().HitboxRoll and not checkcaller() then
-                    if key == "CFrame"
-                        and lp.Character
-                        and lp.Character:FindFirstChild("HumanoidRootPart")
-                        and lp.Character:FindFirstChild("Humanoid")
-                        and lp.Character.Humanoid.Health > 0 then
-
-                        if self == lp.Character.HumanoidRootPart then
-                            return originalCFrame or CFrame.new()
-                        elseif self == lp.Character.Head then
-                            return (originalCFrame or CFrame.new()) + Vector3.new(0, lp.Character.HumanoidRootPart.Size / 2 + 0.5, 0)
+            OldIndex = hookmetamethod(
+                game,
+                '__index',
+                newcclosure(function(self, key)
+                    if getgenv().HitboxRoll and not checkcaller() then
+                        if
+                            key == 'CFrame'
+                            and lp.Character
+                            and lp.Character:FindFirstChild('HumanoidRootPart')
+                            and lp.Character:FindFirstChild('Humanoid')
+                            and lp.Character.Humanoid.Health > 0
+                        then
+                            if self == lp.Character.HumanoidRootPart then
+                                return originalCFrame or CFrame.new()
+                            elseif self == lp.Character.Head then
+                                return (originalCFrame or CFrame.new())
+                                    + Vector3.new(
+                                        0,
+                                        lp.Character.HumanoidRootPart.Size / 2
+                                            + 0.5,
+                                        0
+                                    )
+                            end
                         end
                     end
-                end
-                return OldIndex(self, key)
-            end))
+                    return OldIndex(self, key)
+                end)
+            )
         end)
-    end
+    end,
 }
