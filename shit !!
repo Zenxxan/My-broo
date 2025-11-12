@@ -35,7 +35,7 @@ return {
             dragHandle.BorderSizePixel = 0
             dragHandle.Parent = mainFrame
             local dragLabel = Instance.new("TextLabel")
-            dragLabel.Text = "plus"
+            dragLabel.Text = "➕"
             dragLabel.Font = Enum.Font.GothamBold
             dragLabel.TextSize = 14
             dragLabel.TextColor3 = Color3.new(1,1,1)
@@ -45,7 +45,7 @@ return {
             dragLabel.TextXAlignment = Enum.TextXAlignment.Center
             dragLabel.Parent = dragHandle
             local minimizeBtn = Instance.new("TextButton")
-            minimizeBtn.Text = "minus"
+            minimizeBtn.Text = "➖"
             minimizeBtn.Font = Enum.Font.GothamBold
             minimizeBtn.TextSize = 14
             minimizeBtn.TextColor3 = Color3.new(1,1,1)
@@ -65,7 +65,7 @@ return {
             title.TextXAlignment = Enum.TextXAlignment.Left
             title.Parent = mainFrame
             local statusLabel = Instance.new("TextButton")
-            statusLabel.Text = "circle Hitbox Roll: OFF"
+            statusLabel.Text = "⦿ Hitbox Roll: OFF"
             statusLabel.Font = Enum.Font.Gotham
             statusLabel.TextSize = 14
             statusLabel.TextColor3 = Color3.fromRGB(200, 220, 255)
@@ -79,7 +79,7 @@ return {
                 minimized = not minimized
                 statusLabel.Visible = not minimized
                 mainFrame.Size = minimized and UDim2.new(0, 200, 0, 30) or UDim2.new(0, 200, 0, 100)
-                minimizeBtn.Text = minimized and "expand" or "minus"
+                minimizeBtn.Text = minimized and "⿻" or "➖"
             end)
             local dragging, dragStart, startPos, inputConn
             local function onInputChanged(input)
@@ -107,7 +107,7 @@ return {
             statusLabel.MouseButton1Click:Connect(function()
                 if not toggleMasterEnabled then Notify("Hitbox Roll", "Enable from toggle first!", 2) return end
                 getgenv().HitboxRoll = not getgenv().HitboxRoll
-                statusLabel.Text = getgenv().HitboxRoll and "circle Hitbox Roll: ON" or "circle Hitbox Roll: OFF"
+                statusLabel.Text = getgenv().HitboxRoll and "⦿ Hitbox Roll: ON" or "⦿ Hitbox Roll: OFF"
                 Notify("Hitbox Roll", getgenv().HitboxRoll and "Enabled (Mobile)" or "Disabled (Mobile)", 2)
             end)
             UI.Sections.AntiLock:Toggle({
@@ -117,7 +117,7 @@ return {
                     toggleMasterEnabled = state
                     getgenv().HitboxRoll = false
                     screenGui.Enabled = toggleMasterEnabled and mobileGuiVisible
-                    statusLabel.Text = "circle Hitbox Roll: OFF"
+                    statusLabel.Text = "⦿ Hitbox Roll: OFF"
                     Notify("Hitbox Roll", state and "Ready for Mobile Use" or "Disabled", 2)
                 end
             }, "HitboxRoll")
@@ -137,7 +137,7 @@ return {
                 Callback = function()
                     if not toggleMasterEnabled then Notify("Hitbox Roll", "Enable Hitbox Roll first!", 2) return end
                     getgenv().HitboxRoll = not getgenv().HitboxRoll
-                    statusLabel.Text = getgenv().HitboxRoll and "circle Hitbox Roll: ON" or "circle Hitbox Roll: OFF"
+                    statusLabel.Text = getgenv().HitboxRoll and "⦿ Hitbox Roll: ON" or "⦿ Hitbox Roll: OFF"
                     Notify("Hitbox Roll", getgenv().HitboxRoll and "Enabled (Keybind)" or "Disabled (Keybind)", 2)
                 end
             }, "HitboxRollKey")
@@ -146,9 +146,10 @@ return {
             local flickerAmplitude = 1.5
             local velocityRangeY = 250
             local fakeAngleSpeed = 720
-            local originalCFrame, originalVelocity, fakeCFrame
+            local originalCFrame, originalVelocity, fakeCFrame, fakeVel
             local lastUpdate = 0
-            local updateInterval = 1/60
+            local updateInterval = 1/90
+            local bodyParts = {"UpperTorso", "LowerTorso", "LeftUpperArm", "LeftLowerArm", "LeftHand", "RightUpperArm", "RightLowerArm", "RightHand", "LeftUpperLeg", "LeftLowerLeg", "LeftFoot", "RightUpperLeg", "RightLowerLeg", "RightFoot"}
 
             RunService.Heartbeat:Connect(function()
                 if not getgenv().HitboxRoll then return end
@@ -174,6 +175,7 @@ return {
 
                 local fakeAngle = math.rad(now * fakeAngleSpeed % 360)
                 fakeCFrame = originalCFrame * CFrame.Angles(0, fakeAngle, 0)
+                fakeVel = Vector3.new(math.random(-50,50), math.random(-120,120), math.random(-50,50))
 
                 local newCF = originalCFrame * rollCF * CFrame.new(totalOffset)
                 char:PivotTo(newCF)
@@ -190,13 +192,21 @@ return {
 
             local OldIndex
             OldIndex = hookmetamethod(game, "__index", newcclosure(function(self, key)
-                if getgenv().HitboxRoll and not checkcaller() and key == "CFrame" and lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-                    if self == lp.Character.HumanoidRootPart then
-                        return originalCFrame or self.CFrame
-                    elseif self == lp.Character.Head then
-                        return (originalCFrame or self.CFrame) + Vector3.new(0, lp.Character.HumanoidRootPart.Size.Y / 2 + 0.5, 0)
-                    elseif self == lp.Character.Humanoid then
-                        return { HipHeight = 2 }
+                if getgenv().HitboxRoll and not checkcaller() and lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+                    if key == "CFrame" then
+                        if self == lp.Character.HumanoidRootPart then
+                            return originalCFrame or self.CFrame
+                        elseif self == lp.Character.Head then
+                            return (originalCFrame or self.CFrame) + Vector3.new(0, lp.Character.HumanoidRootPart.Size.Y / 2 + 0.5, 0)
+                        elseif table.find(bodyParts, self.Name) then
+                            return (originalCFrame or self.CFrame) * CFrame.Angles(math.rad(math.random(-45,45)), math.rad(math.random(-90,90)), math.rad(math.random(-45,45)))
+                        end
+                    elseif key == "AssemblyLinearVelocity" or key == "Velocity" then
+                        if self == lp.Character.HumanoidRootPart then
+                            return fakeVel or self[key]
+                        end
+                    elseif key == "HipHeight" and self == lp.Character.Humanoid then
+                        return 2 + math.sin(tick() * 10) * 0.5
                     end
                 end
                 return OldIndex(self, key)
@@ -207,38 +217,74 @@ return {
                 local method = getnamecallmethod()
                 local args = {...}
                 if getgenv().HitboxRoll and not checkcaller() then
-                    if method == "GetPropertyChangedSignal" and (self == lp.Character.HumanoidRootPart or self == lp.Character.Head) and args[1] == "CFrame" then
-                        return
-                    elseif method == "FindPartOnRayWithIgnoreList" or method == "Raycast" then
+                    if method == "GetPropertyChangedSignal" and (self == lp.Character.HumanoidRootPart or self == lp.Character.Head or table.find(bodyParts, self.Name)) and (args[1] == "CFrame" or args[1] == "AssemblyLinearVelocity") then
+                        return {Connect = function() end}
+                    elseif (method == "FindPartOnRayWithIgnoreList" or method == "Raycast" or method == "RaycastWithInstance") then
                         if args[1] and args[1].Origin and args[1].Direction then
                             local ray = args[1]
                             local predictedPos = ray.Origin + ray.Direction * 0.1
-                            if (predictedPos - (originalCFrame or lp.Character.HumanoidRootPart.CFrame).Position).Magnitude < 10 then
-                                args[1] = Ray.new(ray.Origin, ray.Direction * 0.01)
+                            if (predictedPos - (originalCFrame or lp.Character.HumanoidRootPart.CFrame).Position).Magnitude < 25 then
+                                return nil
                             end
                         end
-                    elseif method == "GetChildren" and self == lp.Character then
-                        local children = OldNamecall(self, ...)
-                        for i = #children, 1, -1 do
-                            if children[i]:IsA("BasePart") and children[i] ~= lp.Character.HumanoidRootPart and children[i] ~= lp.Character.Head then
-                                table.remove(children, i)
+                    elseif method == "GetChildren" or method == "GetDescendants" then
+                        if self == lp.Character then
+                            local children = OldNamecall(self, ...)
+                            local filtered = {}
+                            for _, child in pairs(children) do
+                                if child == lp.Character.HumanoidRootPart or child == lp.Character.Head then
+                                    table.insert(filtered, child)
+                                end
                             end
+                            return filtered
                         end
-                        return children
+                    elseif method == "FireServer" and self.Name:find("RemoteEvent") and string.find(self.Name:lower(), "aim" or "hit" or "shoot") then
+                        return
                     end
                 end
                 return OldNamecall(self, unpack(args))
             end))
 
+            local OldNewIndex
+            OldNewIndex = hookmetamethod(game, "__newindex", newcclosure(function(self, key, value)
+                if getgenv().HitboxRoll and not checkcaller() and self == lp.Character.HumanoidRootPart and (key == "CFrame" or key == "AssemblyLinearVelocity") then
+                    return
+                end
+                return OldNewIndex(self, key, value)
+            end))
+
             local OldGetProperty
-            OldGetProperty = hookfunction(getrawmetatable(game).__index, newcclosure(function(self, key)
-                if getgenv().HitboxRoll and not checkcaller() and key == "Rotation" and self == lp.Character.HumanoidRootPart then
-                    return fakeCFrame.Rotation
-                elseif getgenv().HitboxRoll and not checkcaller() and key == "LookVector" and self == lp.Character.HumanoidRootPart then
-                    return fakeCFrame.LookVector
+            OldGetProperty = hookmetamethod(game, "__index", newcclosure(function(self, key)
+                if getgenv().HitboxRoll and not checkcaller() then
+                    if key == "Rotation" and self == lp.Character.HumanoidRootPart then
+                        return fakeCFrame.Rotation
+                    elseif key == "LookVector" and self == lp.Character.HumanoidRootPart then
+                        return fakeCFrame.LookVector
+                    elseif key == "Position" and (self == lp.Character.HumanoidRootPart or self == lp.Character.Head) then
+                        return (originalCFrame or self.CFrame).Position + Vector3.new(math.random(-2,2), math.random(-1,1), math.random(-2,2))
+                    end
                 end
                 return OldGetProperty(self, key)
             end))
+
+            local mt = getrawmetatable(game)
+            local oldNamecall = mt.__namecall
+            local oldIndex = mt.__index
+            setreadonly(mt, false)
+
+            mt.__namecall = newcclosure(function(self, ...)
+                return OldNamecall(self, ...)
+            end)
+
+            mt.__index = newcclosure(function(self, key)
+                return OldIndex(self, key)
+            end)
+
+            mt.__newindex = newcclosure(function(self, key, value)
+                return OldNewIndex(self, key, value)
+            end)
+
+            setreadonly(mt, true)
         end)
     end
 }
